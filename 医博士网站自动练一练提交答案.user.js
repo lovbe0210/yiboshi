@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         医博士网站自动练一练提交答案
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  try to take over the world!
 // @author       Lvhailong
 // @match        http://www.yiboshi.com/usercenter/index
@@ -25,18 +25,20 @@
         if(!this.readyState||this.readyState=='loaded'||this.readyState=='complete'){
             $(document).ready(function(){
                 //alert("你好");
-                // 先从localStorage中获取用户信息，如果没有则发起异步请求
-                var userId = window.localStorage.getItem("userId");
+                // 刷新页面或重新加载时先清除缓存信息
+                window.sessionStorage.clear();
+                // 先从sessionStorage中获取用户信息，如果没有则发起异步请求
+                var userId = window.sessionStorage.getItem("userId");
                 var token = "";
                 // 获取我的课程计划分类,同样先从缓存中取
-                var subList = JSON.parse(window.localStorage.getItem("subList"));
+                var subList = JSON.parse(window.sessionStorage.getItem("subList"));
                 // 定义当前分类训练的id和name
                 var curTrainId = "";
                 var curTrainName = "";
                 var projectList;
                 if(userId === undefined || userId === null || userId.length === 0){
                     // 说明没有缓存，进行异步请求然后放进缓存中
-                    // 从localstorage中获取用户的token信息
+                    // 从localStorage中获取用户的token信息
                     var tokenString = window.localStorage.getItem("www_5HGGWrXN_token");
                     // 去掉两头的双引号然后再拼接OAuth2.0认证的token类型Bearer
                     token = tokenString.substring(0,tokenString.length-1);
@@ -53,7 +55,7 @@
                         success: function(data) {
                             userId = data.userInfo.id;
                             // 同时放进缓存中
-                            window.localStorage.setItem("userId",userId);
+                            window.sessionStorage.setItem("userId",userId);
                             // 如果课程分类在缓存中获取不到继续ajax请求获取
                             if(subList === undefined || subList === null || subject.length === 0){
                                 getSubList();
@@ -74,8 +76,8 @@
                             var course = (project.courseList)[j];
                             if(course.name === courseName){
                                 // 找到正主，发送ajax请求直接保存分数
-                                // 判断下是否已经看完视频防止检测到异常
-                                if(course.ybsCourseState === undefined || course.ybsCourseState.courseState == 1){
+                                // 判断下是否已经看了检测到异常
+                                if(course.ybsCourseState === undefined || course.ybsCourseState.courseState == 0){
                                    alert("请先看完视频再提交练习分数");
                                    return false;
                                 }
@@ -119,7 +121,7 @@
                             subList = data.data.list;
                             // 放进缓存,这一这里需要序列化
                             var subListstr = JSON.stringify(subList);
-                            window.localStorage.setItem("subList",subListstr);
+                            window.sessionStorage.setItem("subList",subListstr);
                         }
                     });
                 }
@@ -138,7 +140,7 @@
                         }
                     }
                     // 这里先判断当前分类的课程有没有存进缓存，如果没有再进行ajax请求
-                    projectList = JSON.parse(window.localStorage.getItem("projectList" + curTrainId));
+                    projectList = JSON.parse(window.sessionStorage.getItem("projectList" + curTrainId));
                     if(projectList === undefined || projectList === null || projectList.length === 0){
                         $.ajax
                         ({
@@ -152,7 +154,7 @@
                                 projectList = data.data.list;
                                 // 放进缓存,先进行序列化
                                 var projectListstr = JSON.stringify(projectList);
-                                window.localStorage.setItem("projectList" + curTrainId, projectListstr);
+                                window.sessionStorage.setItem("projectList" + curTrainId, projectListstr);
                             }
                         });
                     }
