@@ -1,24 +1,24 @@
 // ==UserScript==
 // @name         医博士网站自动练一练提交答案
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  try to take over the world!
+// @version      1.1
+// @description  更新页面按钮捕捉，添加高亮块!
 // @author       Lvhailong
 // @match        http://www.yiboshi.com/usercenter/index
 // @icon         https://lovbe-lvyiclub.oss-cn-beijing.aliyuncs.com/pic/c.png
 // @grant        none
 // ==/UserScript==
-
+ 
 (function() {
     'use strict';
-
+ 
     // Your code here...
-
+ 
     var jqueryScript=document.createElement('script');//创建script标签节点
     jqueryScript.setAttribute('type','text/javascript');//设置script类型
     jqueryScript.setAttribute('src','http://libs.baidu.com/jquery/2.0.0/jquery.min.js');//设置js地址
     document.body.appendChild(jqueryScript);//将js追加为body的子标签
-
+ 
     //判断jqueryScript是否加载成功
     jqueryScript.onload=jqueryScript.onreadystatechange=function(){
         //如果jqueryScript加载成功则创建script2引入，这样就不会由于后面的js依赖前面的js导致后面的js先加载而导致程序报错
@@ -63,8 +63,8 @@
                         }
                     });
                 }
-
-
+ 
+ 
                 /**
                  *   定义提交分数的方法
                  */
@@ -159,27 +159,32 @@
                         });
                     }
                     // 遍历DOM树，添加自动练一练
-                    var projectTR = $("tbody tr:gt(0)");
+                    var projectTR = $("tbody tr:not(:first-child)");
                     for(var x = 0;x < projectTR.length;x++){
                         // 为每一个tr元素添加自动练一练按钮
                         var curprojectTR = projectTR[x];
-                        var curprojectTD = curprojectTR.childNodes[5];
+                        var curprojectTD = curprojectTR.children[4];
                         if(curprojectTD.innerHTML === "课程状态"){
                             continue;
                         }
-                        var curProjectName = curprojectTR.childNodes[1].childNodes[0].innerHTML;
+                        var curProjectName = curprojectTR.children[1].innerText;
                         // 先创建td标签，然后再内嵌a标签，然后再给td标签设置一个点击事件
-                        var newTD = document.createElement("td");
-                        var a = document.createElement("a");
-                        var text = document.createTextNode(curprojectTD.innerHTML);
-                        a.appendChild(text);
-                        newTD.appendChild(a);
-                        newTD.setAttribute("onclick","submitScore('"+ curProjectName +"')")
-                        curprojectTR.replaceChild(newTD ,curprojectTD);
+                        //var newTD = document.createElement("td");
+                        //var a = document.createElement("a");
+                        //var text = document.createTextNode(curprojectTD.innerHTML);
+                        //a.appendChild(text);
+                        //newTD.appendChild(a);
+                        curprojectTD.setAttribute("title","快速练一练");
+                        curprojectTD.setAttribute("style","background:rgba(73, 199, 185, 0.85);");
+                        curprojectTD.setAttribute("onclick","submitScore('"+ curProjectName +"')");
+                        //curprojectTR.replaceChild(newTD ,curprojectTD);
                     }
                 };
                 // 这里页面进来默认调用一次，获取课程列表
-                onChoseSub();
+                //onChoseSub();
+                setTimeout(() => {
+                    onChoseSub();
+                }, 5000)
                 // 给课程分类元素绑定点击事件，自动更新当前课程分类和名称以及课程列表
                 $("div[class='nupt_main']").on("click", "a", function() {
                     // 这里需要延时等待页面加载完成，要不然获取不到当前课程分类的dom元素，如果依然不能生成快速练一练按钮，可将这里的时间调大一点
